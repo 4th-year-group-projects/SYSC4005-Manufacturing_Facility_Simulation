@@ -1,9 +1,9 @@
-import java.util.ArrayList;
+
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class Buffer {
-    private ComponentType type;
-    private ArrayBlockingQueue<Component> contents;
+    private final ComponentType type;
+    private final ArrayBlockingQueue<Component> contents;
 
     public Buffer(ComponentType type, int size) {
         this.type = type;

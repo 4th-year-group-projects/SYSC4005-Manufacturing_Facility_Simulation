@@ -1,4 +1,144 @@
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+
 public class Simulator {
-    // Clock time in thousandths of minutes
-    // Clock is a glorified counter
+    private int clock; // Clock time in thousandths of minutes
+    private FutureEventList eventList;
+    private final HashMap<ProductType, Integer> production; // Final product counts
+    public Simulator() {
+        this.clock = 0;
+        this.production = new HashMap<>();
+        for (ProductType product : ProductType.values()) {
+            production.put(product, 0);
+        }
+    }
+
+    public void simulate() {
+        // Initialize workstations 1-3
+        Workstation[] workstations = new Workstation[3];
+        Workstation workstation1 = new Workstation(new ComponentType[]{ComponentType.C1}, 3, ProductType.P1, "ws1.dat");
+        Workstation workstation2 = new Workstation(new ComponentType[]{ComponentType.C1, ComponentType.C2}, 2, ProductType.P2, "ws2.dat");
+        Workstation workstation3 = new Workstation(new ComponentType[]{ComponentType.C1, ComponentType.C3}, 1, ProductType.P3, "ws3.dat");
+        workstations[0] = workstation1;
+        workstations[1] = workstation2;
+        workstations[2] = workstation3;
+
+        // Initialize Inspectors 1 & 2
+        Inspector[] inspectors = new Inspector[2];
+        LinkedHashMap<ComponentType, String> insp1data = new LinkedHashMap<>();
+        LinkedHashMap<ComponentType, String> insp2data = new LinkedHashMap<>();
+        insp1data.put(ComponentType.C1, "servinsp1.dat");
+        insp2data.put(ComponentType.C2, "servinsp22.dat");
+        insp2data.put(ComponentType.C3, "servinsp23.dat");
+        Inspector inspector1 = new Inspector(insp1data);
+        Inspector inspector2 = new Inspector(insp2data);
+        inspectors[0] = inspector1;
+        inspectors[1] = inspector2;
+
+        this.eventList = initialize(inspectors);
+        // Action loop
+        while(!eventList.isEmpty()) {
+            Event currEvent = eventList.popEvent();
+            this.clock = currEvent.getTime();
+            System.out.println(this.clock + ": Current[" + currEvent.toString() +"] FEL=" + this.eventList.toString());
+            switch(currEvent.getType()) { // Yield?
+                case INSPECTOR_FINISH -> {
+                    Inspector inspectorSource = currEvent.getInspectorSource();
+                    Workstation workstation = getWorkstationWithSmallestBuffer(workstations,
+                            inspectorSource.getCurrentComponent());
+                    // Workstation has space
+                    if(workstation != null) {
+                        workstation.addComponentToBuffer(inspectorSource.getCurrentComponent()); // Workstation gets component
+                        generateInspectorEvent(inspectorSource);
+                        // Check workstations if they can start new product job
+                        if(workstation.canStartNewProduct()) {
+                            generateWorkstationEvent(workstation);
+                            for(Inspector inspector : inspectors) {
+                                if(inspector.getState().equals(State.IDLE) &&
+                                        workstation.needsComponent(inspector.getCurrentComponent())) {
+                                    workstation.addComponentToBuffer(inspector.getCurrentComponent());
+                                    generateInspectorEvent(inspector);
+                                }
+                            }
+                        }
+                    }
+                    // No workstations have space
+                    else {
+                        inspectorSource.setState(State.IDLE);
+                    }
+                }
+                case WORKSTATION_FINISH -> {
+                    Workstation workstationSource = currEvent.getWorkstationSource();
+                    production.put(workstationSource.getProduct(), production.get(workstationSource.getProduct()) + 1);
+                    workstationSource.setState(State.IDLE);
+                    // Workstation can start a new product (has all components) -> can open space in buffers
+                    if(workstationSource.canStartNewProduct()) {
+                        generateWorkstationEvent(workstationSource);
+                        // Check idle inspectors for components, add to workstation
+                        for(Inspector inspector : inspectors) {
+                            if(inspector.getState().equals(State.IDLE) &&
+                                    workstationSource.needsComponent(inspector.getCurrentComponent())) {
+                                workstationSource.addComponentToBuffer(inspector.getCurrentComponent());
+                                generateInspectorEvent(inspector);
+                            }
+                        }
+                    }
+                    // Workstation cannot start a new product (missing required component)
+                    else {
+                        // Don't think anything needs to happen
+                    }
+
+                }
+            }
+        }
+        System.out.println("Final Production: " + production.toString());
+    }
+
+    private void generateInspectorEvent(Inspector inspector) {
+        if(inspector.isInspectionTimesEmpty()) return;
+        int time = inspector.startNewComponent(); // Instructor starts new component
+        Event newEvent = new Event(clock + time, EventType.INSPECTOR_FINISH, inspector);
+        eventList.scheduleEvent(newEvent);
+    }
+
+    private void generateWorkstationEvent(Workstation workstation) {
+        if(workstation.isProductionTimesEmpty()) return;
+        int time = workstation.startNewProduct();
+        Event newEvent = new Event(clock + time, EventType.WORKSTATION_FINISH, workstation);
+        eventList.scheduleEvent(newEvent);
+    }
+
+    private FutureEventList initialize(Inspector[] inspectors) {
+        // Should return a future event list of the initial inspector events
+        FutureEventList initialList = new FutureEventList();
+        for(Inspector inspector : inspectors) {
+            Event newEvent = new Event(this.clock + inspector.startNewComponent(), EventType.INSPECTOR_FINISH, inspector);
+            initialList.scheduleEvent(newEvent);
+        }
+        System.out.println(initialList);
+        return initialList;
+    }
+
+    private Workstation getWorkstationWithSmallestBuffer(Workstation[] workstations, ComponentType component) {
+        // Return the workstation with the smallest buffer / or highest priority if tied
+        // Assumes that components will always have at least 1 assigned workstation
+        // Returns null if no workstations available
+        Workstation assignedWorkstation = null;
+        int currWorkstationBufferOccupancy = Integer.MAX_VALUE;
+        int currWorkstationPriority = -1;
+        for(Workstation workstation : workstations) {
+            if(workstation.needsComponent(component)) {
+                if(workstation.getBufferOccupancy(component) <  currWorkstationBufferOccupancy &&
+                        workstation.getPriority() > currWorkstationPriority) {
+                    assignedWorkstation = workstation;
+                }
+            }
+        }
+        return assignedWorkstation;
+    }
+
+    public static void main() {
+        Simulator simulator = new Simulator();
+        simulator.simulate();
+    }
 }

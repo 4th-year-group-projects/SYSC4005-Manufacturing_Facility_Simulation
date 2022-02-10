@@ -1,0 +1,3 @@
+public enum EventType {
+    INSPECTOR_FINISH, WORKSTATION_FINISH
+}

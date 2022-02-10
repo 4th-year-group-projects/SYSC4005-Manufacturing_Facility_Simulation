@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Reader {
-    public static ArrayList readFile(String fileName) {
-        ArrayList array = new ArrayList<Double>();
+    // Assumes that all entries will have 3 decimal places.
+    public static ArrayList<Integer> readFile(String fileName) {
+        ArrayList array = new ArrayList<Integer>();
         try {
-            Scanner scanner = new Scanner(new File(fileName));
+            Scanner scanner = new Scanner(new File("./SimulationData/" + fileName));
             while (scanner.hasNext()) {
-                String temp = scanner.next();
-                array.add(Double.parseDouble(temp));
+                float temp = scanner.nextFloat();
+                array.add(Integer.valueOf(Math.round(temp * 1000)));
             }
             scanner.close();
         } catch (FileNotFoundException e) {

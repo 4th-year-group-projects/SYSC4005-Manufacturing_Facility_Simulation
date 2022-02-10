@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Random;
 
 
 public class Inspector {
@@ -12,55 +11,56 @@ public class Inspector {
     // random selection for first item of c2 and c3
     // method for putting components into buffers once component is inspected
 
-    private HashMap<ComponentType, ArrayList<Double>> inspectionTimeArrays;
-    private boolean blockedState;
+    private HashMap<ComponentType, ArrayList<Integer>> inspectionTimes;
+    private State state;
     private int numComponents;
+    private ComponentType currentComponent;
+
     public Inspector(HashMap<ComponentType, String> filenames) {
         this.numComponents = filenames.size();
-        this.blockedState = false;
+        this.state = State.IDLE;
+        inspectionTimes = new HashMap<>();
         for (ComponentType componentType : filenames.keySet()) {
-            ArrayList<Double> array = Reader.readFile(filenames.get(componentType));
-            this.inspectionTimeArrays.put(componentType, array);
+            ArrayList<Integer> array = Reader.readFile(filenames.get(componentType));
+            this.inspectionTimes.put(componentType, array);
         }
     }
 
-    public void setBlockedState(Boolean state) {
-        this.blockedState = state;
+    public void setState(State state) {
+        this.state = state;
     }
 
-    public Boolean getBlockedState() {
-        return this.blockedState;
+    public State getState() {
+        return this.state;
+    }
+    
+    public int startNewComponent() {
+        // Returns the time this component will take to complete (thousandths of minutes)
+        this.state = State.BUSY;
+        this.currentComponent = chooseNextComponent();
+        return getComponentTime(this.currentComponent);
+    }
+
+    public ComponentType getCurrentComponent() {
+        return currentComponent;
     }
 
     private ComponentType chooseNextComponent() {
         int index = Randomizer.getRandomNumber(numComponents);
-        return new ArrayList<>(inspectionTimeArrays.keySet()).get(index);
+        return new ArrayList<>(inspectionTimes.keySet()).get(index);
     }
 
-    private double getComponent(ComponentType type) {
-        double time = inspectionTimeArrays.get(type).get(0);
-        inspectionTimeArrays.get(type).remove(0);
+    private int getComponentTime(ComponentType type) {
+        int time = inspectionTimes.get(type).get(0);
+        inspectionTimes.get(type).remove(0);
+        if(inspectionTimes.get(type).isEmpty()) {
+            numComponents--;
+            inspectionTimes.remove(type);
+        }
         return time;
     }
 
-    public Double getComponent1Time() {
-        ArrayList<Double> comp1TimeArray = this.inspectionTimeArrays.get(ComponentType.C1);
-        Double value = comp1TimeArray.get(0);
-        comp1TimeArray.remove(0);
-        return value;
-    }
-
-    public Double getComponent2Time() {
-        ArrayList<Double> comp2TimeArray = this.inspectionTimeArrays.get(ComponentType.C2);
-        Double value = comp2TimeArray.get(0);
-        comp2TimeArray.remove(0);
-        return value;
-    }
-
-    public Double getComponent3Time() {
-        ArrayList<Double> comp3TimeArray = this.inspectionTimeArrays.get(ComponentType.C3);
-        Double value = comp3TimeArray.get(0);
-        comp3TimeArray.remove(0);
-        return value;
+    public boolean isInspectionTimesEmpty() {
+        return this.inspectionTimes.isEmpty();
     }
 }
