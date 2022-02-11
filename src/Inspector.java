@@ -3,13 +3,6 @@ import java.util.HashMap;
 
 
 public class Inspector {
-    // Has production file(s) associated with its production
-    // has a next method -> get the next production item
-    // instance variables: array of files
-    // convert to data structure when constructing
-    // blockedState boolean -> workstation "notifies" inspectors when buffer becomes full or empty
-    // random selection for first item of c2 and c3
-    // method for putting components into buffers once component is inspected
 
     private HashMap<ComponentType, ArrayList<Integer>> inspectionTimes;
     private State state;
