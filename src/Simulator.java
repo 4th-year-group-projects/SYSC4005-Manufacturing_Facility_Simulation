@@ -5,6 +5,7 @@ public class Simulator {
     private int clock; // Clock time in thousandths of minutes
     private FutureEventList eventList;
     private final HashMap<ProductType, Integer> production; // Final product counts
+
     public Simulator() {
         this.clock = 0;
         this.production = new HashMap<>();
@@ -40,7 +41,7 @@ public class Simulator {
         while(!eventList.isEmpty()) {
             Event currEvent = eventList.popEvent();
             this.clock = currEvent.getTime();
-            System.out.println(this.clock + ": Current[" + currEvent.toString() +"] FEL=" + this.eventList.toString());
+            System.out.println("\n"+this.clock + ": Current[" + currEvent.toString() +"] FEL=" + this.eventList.toString());
             switch(currEvent.getType()) { // Yield?
                 case INSPECTOR_FINISH -> {
                     Inspector inspectorSource = currEvent.getInspectorSource();
@@ -137,8 +138,4 @@ public class Simulator {
         return assignedWorkstation;
     }
 
-    public static void main() {
-        Simulator simulator = new Simulator();
-        simulator.simulate();
-    }
 }

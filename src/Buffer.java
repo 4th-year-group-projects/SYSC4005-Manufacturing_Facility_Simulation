@@ -17,6 +17,7 @@ public class Buffer {
     public int getSize() {
         return this.contents.size();
     }
+
     // Returns bool whether component was successfully added
     public Boolean addComponent(Component component) {
         if(component.getType().equals(type)) {
