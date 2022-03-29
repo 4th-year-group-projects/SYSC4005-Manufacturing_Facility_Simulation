@@ -10,17 +10,39 @@ public class Workstation {
     private ArrayList<ComponentType> componentTypes;
     private static final int BUFFER_SIZE = 2;
     private ArrayList<Buffer> buffers;
+    private String name;
+    private Boolean useRNG;
+    private RNGenerator productionTimeGenerator;
 
     // Assumes that all workstation will have at least 1 buffer
-    public Workstation(ComponentType types[], int priority, ProductType product, String filename) {
+    public Workstation(String name, ComponentType types[], int priority, ProductType product, String filename) {
+        this.useRNG = false;
+        this.name = name;
         this.productionTimes = Reader.readFile(filename);
+        this.productionTimeGenerator = null;
         this.product = product;
         this.state = State.IDLE;
         this.componentTypes = new ArrayList(Arrays.asList(types));
         this.priority = priority;
         buffers = new ArrayList<>();
         for (ComponentType type : types) {
-            buffers.add(new Buffer(type, BUFFER_SIZE));
+            buffers.add(new Buffer(name + " " + type.toString(), type, BUFFER_SIZE));
+        }
+    }
+
+    // Assumes that all workstation will have at least 1 buffer
+    public Workstation(String name, ComponentType types[], int priority, ProductType product, RNGenerator generator) {
+        this.useRNG = true;
+        this.productionTimeGenerator = generator;
+        this.name = name;
+        this.productionTimes = null;
+        this.product = product;
+        this.state = State.IDLE;
+        this.componentTypes = new ArrayList(Arrays.asList(types));
+        this.priority = priority;
+        buffers = new ArrayList<>();
+        for (ComponentType type : types) {
+            buffers.add(new Buffer(name + " " + type.toString(), type, BUFFER_SIZE));
         }
     }
 
@@ -85,13 +107,27 @@ public class Workstation {
     }
 
     private int getProductTime() {
-        int time = productionTimes.get(0);
-        productionTimes.remove(0);
+        int time;
+        if(!useRNG) {
+            time = productionTimes.get(0);
+            productionTimes.remove(0);
+        }
+        else {
+            time = (int) (productionTimeGenerator.getNext() * 1000);
+        }
         return time;
     }
 
     public void setState(State state) {
         this.state = state;
+    }
+
+    public ArrayList<Buffer> getBuffers() {
+        return this.buffers;
+    }
+
+    public State getState() {
+        return this.state;
     }
 
     public ProductType getProduct() {
@@ -103,6 +139,19 @@ public class Workstation {
     }
 
     public boolean isProductionTimesEmpty() {
-        return this.productionTimes.isEmpty();
+        if(!useRNG) {
+            return this.productionTimes.isEmpty();
+        }
+        else {
+            return false;
+        }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
