@@ -11,8 +11,7 @@ public class Simulator {
     private Workstation[] workstations;
     private Inspector[] inspectors;
     private int iterations;
-    private static final int NUM_SIMULATIONS = 10; // CHANGE THIS FOR NUMBER OF SIMULATIONS
-    private static final int NUM_ITERATIONS = 5000; // CHANGE THIS FOR NUMBER OF ITERATIONS
+    private int numIterations = 5000; // CHANGE THIS FOR NUMBER OF ITERATIONS
     private static final Random random = new Random(66546215);
     private boolean useRNG;
 
@@ -27,8 +26,9 @@ public class Simulator {
         }
     }
 
-    public void runRNGSimulations() {
-        for(int i = 0; i < NUM_SIMULATIONS; i++) {
+    public void runRNGSimulations(int numSimulations, int numIterations) {
+        this.numIterations = numIterations;
+        for(int i = 0; i < numSimulations; i++) {
             reset();
             System.out.println("SIMULATION " + (i+1) + ":");
             simulate();
@@ -110,7 +110,7 @@ public class Simulator {
         StateRecord record = new StateRecord(clock, null, null, null, workstations, inspectors, production);
         recordList.addStateRecord(record);
         // Action loop
-        while(!eventList.isEmpty() && iterations < NUM_ITERATIONS) {
+        while(!eventList.isEmpty() && iterations < numIterations) {
             iterations++;
             Event currEvent = eventList.popEvent();
             this.clock = currEvent.getTime();
