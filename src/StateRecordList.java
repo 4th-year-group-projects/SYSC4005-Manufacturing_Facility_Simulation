@@ -19,6 +19,9 @@ public class StateRecordList {
     public void addStateRecord(StateRecord record) {
         this.stateRecordList.add(record);
         this.totalTime = record.getClock();
+        if(stateRecordList.size() >= 2) {
+            this.totalTime = stateRecordList.get(stateRecordList.size() - 1).getClock() - stateRecordList.get(0).getClock();
+        }
     }
 
     @Override

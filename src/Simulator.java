@@ -14,6 +14,7 @@ public class Simulator {
     private int numIterations = 5000; // CHANGE THIS FOR NUMBER OF ITERATIONS
     private static final Random random = new Random(66546215);
     private boolean useRNG;
+    private static final int INITIALIZATION_TIME = 300000;
 
     public Simulator(Boolean useRNG) {
         this.useRNG = useRNG;
@@ -107,8 +108,8 @@ public class Simulator {
             initializeNoRNG();
         }
         this.eventList = initialize(inspectors);
-        StateRecord record = new StateRecord(clock, null, null, null, workstations, inspectors, production);
-        recordList.addStateRecord(record);
+        //StateRecord record = new StateRecord(clock, null, null, null, workstations, inspectors, production);
+        //recordList.addStateRecord(record);
         // Action loop
         while(!eventList.isEmpty() && iterations < numIterations) {
             iterations++;
@@ -164,8 +165,13 @@ public class Simulator {
 
                 }
             }
-            record = new StateRecord(clock, currEvent.getType(), currEvent.getWorkstationSource(), currEvent.getInspectorSource(), workstations, inspectors, production);
-            recordList.addStateRecord(record);
+            if(clock >= INITIALIZATION_TIME) {
+                StateRecord record = new StateRecord(clock, currEvent.getType(), currEvent.getWorkstationSource(), currEvent.getInspectorSource(), workstations, inspectors, production);
+                recordList.addStateRecord(record);
+            }
+
+
+
         }
         System.out.println("Final Production: " + production.toString());
         //System.out.println(recordList.toString());
