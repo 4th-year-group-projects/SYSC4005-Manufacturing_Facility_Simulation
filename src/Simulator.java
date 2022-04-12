@@ -122,11 +122,11 @@ public class Simulator {
                     /** Substitute for alternative **/
                     Workstation workstation = null;
                     if (inspectorSource == inspectors[0]) {                                     // comment these out
-                        workstation = getNextWorkstationAlternativeStrategy(workstations);      // leave this
+                        workstation = getNextWorkstationAlternativeStrategy(workstations);      // comment these out
                     }                                                                           // comment these out
                     else {                                                                      // comment these out
-                        workstation = getWorkstationWithSmallestBuffer(workstations,            // comment these out
-                                inspectorSource.getCurrentComponent());                         // comment these out
+                        workstation = getWorkstationWithSmallestBuffer(workstations,            // leave this
+                                inspectorSource.getCurrentComponent());                         // leave this
                     }                                                                           // comment these out
                     /** Alternative selection ends here **/
                     // Workstation has space
