@@ -119,8 +119,16 @@ public class Simulator {
             switch(currEvent.getType()) { // Yield?
                 case INSPECTOR_FINISH -> {
                     Inspector inspectorSource = currEvent.getInspectorSource();
-                    Workstation workstation = getWorkstationWithSmallestBuffer(workstations,
-                            inspectorSource.getCurrentComponent());
+                    /** Substitute for alternative **/
+                    Workstation workstation = null;
+                    if (inspectorSource == inspectors[0]) {                                     // comment these out
+                        workstation = getNextWorkstationAlternativeStrategy(workstations);      // leave this
+                    }                                                                           // comment these out
+                    else {                                                                      // comment these out
+                        workstation = getWorkstationWithSmallestBuffer(workstations,            // comment these out
+                                inspectorSource.getCurrentComponent());                         // comment these out
+                    }                                                                           // comment these out
+                    /** Alternative selection ends here **/
                     // Workstation has space
                     if(workstation != null) {
                         workstation.addComponentToBuffer(inspectorSource.getCurrentComponent()); // Workstation gets component
@@ -202,6 +210,7 @@ public class Simulator {
         return initialList;
     }
 
+    // This is the initial selection policy (and what we want to improve on)
     private Workstation getWorkstationWithSmallestBuffer(Workstation[] workstations, ComponentType component) {
         // Return the workstation with the smallest buffer / or highest priority if tied
         // Assumes that components will always have at least 1 assigned workstation
@@ -214,6 +223,64 @@ public class Simulator {
                 if(workstation.getBufferOccupancy(component) <  currWorkstationBufferOccupancy &&
                         workstation.getPriority() > currWorkstationPriority) {
                     assignedWorkstation = workstation;
+                }
+            }
+        }
+        return assignedWorkstation;
+    }
+
+    // This is the alternative selection policy (for inspector 1), and is specifically implented for the 3 workstation,
+    // 2 instructor
+    private Workstation getNextWorkstationAlternativeStrategy(Workstation[] workstations) {
+        // To avoid workstation idle times, we wish to select any workstations that can produce (other buffer
+        // already has components in it (for inspector 1).
+        // If workstations 2 and 3 have empty buffers, we put our components in workstation 1
+        // Otherwise (or if workstation 1 is full) we put the component in whatever on whatever inspector 2 is working on
+        Workstation assignedWorkstation = null;
+        Workstation w1 = workstations[0];
+        Workstation w2 = workstations[1];
+        Workstation w3 = workstations[2];
+        // Both w2 and w3 are empty, put a component in the one inspector 2 will add to
+        if(w2.allBuffersEmpty() && w3.allBuffersEmpty()) {
+            ComponentType goingToInspect = inspectors[1].getCurrentComponent();
+            if(w2.usesComponent(goingToInspect)) {
+                assignedWorkstation = w2;
+            }
+            else if(w3.usesComponent(goingToInspect)) {
+                assignedWorkstation = w3;
+            }
+        }
+        // w2 or w3 are not empty
+        else {
+            int w2compare = w2.compareBuffers(ComponentType.C1, ComponentType.C2);
+            int w3compare = w3.compareBuffers(ComponentType.C1, ComponentType.C3);
+            if(w2compare >= 0 && w3compare >= 0) { // Can do this since we know at least one has a component
+                // Both workstations are either c1 dominant or equal, so try adding to w1
+                if(w1.needsComponent(ComponentType.C1)) {
+                    assignedWorkstation = w1;
+                }
+                else { // if c1 is full, choose the w2 or w3, whichever has smaller c1 buffer, w2 if tied, block if full
+                    if(w2.needsComponent(ComponentType.C1)
+                            && w2.getBufferOccupancy(ComponentType.C1) <= w3.getBufferOccupancy(ComponentType.C1)) {
+                        assignedWorkstation = w2;
+                    }
+                    else if(w3.needsComponent(ComponentType.C1)) {
+                        assignedWorkstation = w3;
+                    }
+                    else {
+                        assignedWorkstation = null;
+                    }
+                }
+            }
+            else {
+                if(w2compare <= w3compare && w2.needsComponent(ComponentType.C1)) {
+                    assignedWorkstation = w2;
+                }
+                else if(w3.needsComponent(ComponentType.C1)) {
+                    assignedWorkstation = w3;
+                }
+                else {
+                    assignedWorkstation = null;
                 }
             }
         }

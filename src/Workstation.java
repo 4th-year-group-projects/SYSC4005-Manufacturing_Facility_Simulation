@@ -46,6 +46,16 @@ public class Workstation {
         }
     }
 
+    public int compareBuffers(ComponentType type1, ComponentType type2) {
+        Buffer b1 = null;
+        Buffer b2 = null;
+        for (Buffer b : buffers) {
+            if(b.getType() == type1) b1 = b;
+            if(b.getType() == type2) b2 = b;
+        }
+        return b1.getSize() - b2.getSize();
+    }
+
     public boolean needsComponent(ComponentType type) {
         for(Buffer buffer : buffers) {
             if(buffer.getType().equals(type) && buffer.getSize() < BUFFER_SIZE) {
@@ -63,6 +73,19 @@ public class Workstation {
             }
         }
         return -1;
+    }
+
+    public boolean allBuffersEmpty() {
+        for (Buffer b : buffers) {
+            if (!b.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean usesComponent(ComponentType type) {
+        return this.componentTypes.contains(type);
     }
 
     public int[] getAllBufferOccupancies() {

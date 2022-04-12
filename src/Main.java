@@ -10,7 +10,7 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) {
         Simulator simulator = new Simulator(true);
-        simulator.runRNGSimulations(10, 5000);
+        simulator.runRNGSimulations(10, 10000);
 
         Simulator simulatorNoRNG = new Simulator(false);
         simulatorNoRNG.simulate();

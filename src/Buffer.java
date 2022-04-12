@@ -30,6 +30,10 @@ public class Buffer {
         else return false;
     }
 
+    public Boolean isEmpty() {
+        return this.contents.isEmpty();
+    }
+
     public String getName() {
         return name;
     }
